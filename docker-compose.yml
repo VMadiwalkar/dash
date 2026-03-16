@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql    
+    
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --log.level=INFO
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        POSTGRES_URL: ${POSTGRES_URL}
+        POSTGRES_PRISMA_URL: ${POSTGRES_PRISMA_URL}
+        POSTGRES_URL_NON_POOLING: ${POSTGRES_URL_NON_POOLING}
+    container_name: dashboard
+    restart: unless-stopped
+    env_file:
+      - .env
+    # command: ["tail", "-f", "/dev/null"] 
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`vinay.local`)"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=3000"
+    
+
+
+
+volumes:
+  postgres_data:
