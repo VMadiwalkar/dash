@@ -44,7 +44,7 @@ services:
       - "3000:3000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`vinay.local`)"
+      - "traefik.http.routers.dashboard.rule=PathPrefix(`/`)"
       - "traefik.http.routers.dashboard.entrypoints=web"
       - "traefik.http.services.dashboard.loadbalancer.server.port=3000"
     
